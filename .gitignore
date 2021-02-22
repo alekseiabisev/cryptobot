@@ -1,0 +1,9 @@
+# Kraken-Bot related
+config.json
+kraken.key
+LICENSE
+
+*.ipynb
+.DS_Store
+
+/log
