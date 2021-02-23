@@ -167,7 +167,7 @@ def add_order(type, amount):
     req_data['pair'] = trading_pair
     req_data['ordertype'] = 'market'
     req_data['trading_agreement'] = 'agree'
-    req_data['volume'] = amount
+    req_data['volume'] = round(amount, 5)
 
     # Execute order
     res_data = kraken.query_private('AddOrder', req_data)
