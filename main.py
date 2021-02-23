@@ -4,36 +4,13 @@ import time
 import json
 import logging
 import os
+from logging import handlers
+
 
 
 # Config comments:
 # min_transaction_volume Consider replacing with API call information about user settings (if there is one)
 # transaction_fee Consider replacing with API call: 'TradeVolume' -> fees -> fee
-
-# Log events
-
-# Create folder (check if exists) for logfiles
-log_dir = 'log'
-if not os.path.exists(log_dir):
-    os.makedirs(log_dir)
-
-# Create logger for application
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
-
-logfile_path = os.path.join(log_dir, 'runtime.log')
-fh = logging.handlers.TimedRotatingFileHandler(filename=logfile_path, when='D', interval=1, backupCount=90, encoding='utf-8', delay=False)
-
-fh = logging.FileHandler(logfile_path, encoding="utf-8")
-fh.setLevel(logging.DEBUG)
-
-# create formatter and add it to the handlers
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-fh.setFormatter(formatter)
-
-# Add handler to the logger
-if logger.handlers == []:
-    logger.addHandler(fh)
 
 # Connect to Kraken
 kraken = krakenex.API()
@@ -44,32 +21,55 @@ with open('config.json') as config_file:
     config = json.load(config_file)
 globals().update(config)
 
-# Get price data
-df = get_data(trend_pair)
 
-# Get exponential moving average trends difference (EMA 10 - EMA 20). Form trade decision
-last = float(df['ewm_diff'][-1:])
-previous = df['ewm_diff'][(-1 - trend_length):-1]
-trend = check_trend(last, previous)
+def logger_init():
+    '''Events logger initialisation'''
 
-# Get current balances. Will be used to check if assets are in balance with a current price
-current_balance = get_balance()
-crypto_amount = current_balance[crypto_trading_sumbol]
-money_amount = current_balance[money_trading_sumbol]
+    # Create folder (check if exists) for logfiles
+    log_dir = 'log'
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
 
-# Cancel all still not executed orders
-kraken.query_private('CancelAll')
+    # Create logger for application
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
 
-# Create a new order in case if it is a right time and there is a balance to allocate
-price = float(df['close'][-1:])
-required_crypto_amount = balancer(price)
+    logfile_path = os.path.join(log_dir, 'runtime.log')
+    fh = logging.handlers.TimedRotatingFileHandler(filename=logfile_path, when='D', interval=1, backupCount=90, encoding='utf-8', delay=False)
+    fh.setLevel(logging.DEBUG)
 
-if trend == 'buy' and required_crypto_amount > 0:
-    add_order('buy', abs(required_crypto_amount))
-elif trend == 'sell' and required_crypto_amount < 0:
-    add_order('sell', abs(required_crypto_amount))
-else:
-    logger.info(trend)
+    # create formatter and add it to the handlers
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fh.setFormatter(formatter)
+
+    # Add handler to the logger
+    logger.addHandler(fh)
+
+    return logger
+
+def monitor_act():
+    # Get price data
+    df = get_data(trend_pair)
+
+    # Get exponential moving average trends difference (EMA 10 - EMA 20). Form trade decision
+    last = float(df['ewm_diff'][-1:])
+    previous = df['ewm_diff'][-7:-1]
+    trend = check_trend(last, previous)
+
+    price = float(df['close'][-1:])
+
+    # Cancel all still not executed orders
+    kraken.query_private('CancelAll')
+
+    # Create a new order in case if it is a right time and there is a balance to allocate
+    required_crypto_amount = balancer(price)
+
+    if trend == 'buy' and required_crypto_amount > 0:
+        add_order('buy', abs(required_crypto_amount))
+    elif trend == 'sell' and required_crypto_amount < 0:
+        add_order('sell', abs(required_crypto_amount))
+    else:
+        logger.info('Trend is: '+trend+'. Buy/sell function is not called.')
 
 def get_balance():
     '''Returns json with balance'''
@@ -144,6 +144,11 @@ def balancer(price):
     Returning required amount to balance out assets.
     If amount negative - crypto assets are > money assets.
     '''
+    # Get current balances. Will be used to check if assets are in balance with a current price
+    current_balance = get_balance()
+    crypto_amount = current_balance[crypto_trading_sumbol]
+    money_amount = current_balance[money_trading_sumbol]
+
     required_crypto_amount = (crypto_amount + money_amount / price) * balance - crypto_amount
     #Comparing required amount ot buy/sell with minimum allowed volume
     if abs(required_crypto_amount) < min_transaction_volume:
@@ -151,7 +156,7 @@ def balancer(price):
     # Comparing crypto assets average price during last trade with current price
     # and checking if change percentage will covering transaction fees
     # transaction fee is doubled, because in order to earn we need to buy and sell
-    elif crypto_amount != 0 and ((money_amount / crypto_amount) - price) / price <= transaction_fee*2:
+    elif crypto_amount != 0 and abs((money_amount / crypto_amount - price) / price) <= transaction_fee*2:
         return 0
 
     return required_crypto_amount
@@ -169,3 +174,16 @@ def add_order(type, amount):
     logger.info('Call '+type+' function: required amount: '+str(amount))
 
     return res_data
+
+
+logger = logger_init()
+
+try:
+    while True:
+        # Check if logger is active
+        if logging.getLogger().hasHandlers() == False:
+            logger_init()
+        monitor_act()
+        time.sleep(60)
+except:
+    logger.info('Error in main loop', exc_info=True)
