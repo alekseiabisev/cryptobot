@@ -7,7 +7,6 @@ import os
 from logging import handlers
 
 
-
 # Config comments:
 # min_transaction_volume Consider replacing with API call information about user settings (if there is one)
 # transaction_fee Consider replacing with API call: 'TradeVolume' -> fees -> fee

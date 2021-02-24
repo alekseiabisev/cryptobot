@@ -1,9 +1,23 @@
+# MACOSX
+.DS_Store
+
 # Kraken-Bot related
 config.json
 kraken.key
 LICENSE
 
+# Jupyter notebook related
 *.ipynb
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+
+# Mac OS related
 .DS_Store
 
+# Directory with logs
 /log
+
+/env
+
+# Other
+.gcloudignore
