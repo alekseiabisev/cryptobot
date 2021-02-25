@@ -14,7 +14,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 # Connect to Kraken
 kraken = krakenex.API()
 if 'KRAKEN_KEY' in os.environ:
-    kraken.load_key('KRAKEN_KEY')
+    kraken.load_key(os.environ['KRAKEN_KEY'])
 else:
     kraken.load_key('kraken.key')
 
