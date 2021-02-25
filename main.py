@@ -11,11 +11,14 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 # min_transaction_volume Consider replacing with API call information about user settings (if there is one)
 # transaction_fee Consider replacing with API call: 'TradeVolume' -> fees -> fee
 
+
 # Connect to Kraken
-kraken = krakenex.API()
+    # For Cloud environment
 if 'KRAKEN_KEY' in os.environ:
-    kraken.load_key(os.environ['KRAKEN_KEY'])
+    kraken = krakenex.API(os.environ['KRAKEN_KEY'], os.environ['KRAKEN_SECRET'])
 else:
+    # For local environment
+    kraken = krakenex.API()
     kraken.load_key('kraken.key')
 
 
@@ -77,7 +80,7 @@ def monitor_act():
 def get_balance():
     '''Returns json with balance'''
     res_balance = kraken.query_private('Balance')
-    current_balance = res_balance["result"]
+    current_balance = res_balance['result']
 
     # Changing pair value type from string to float
     current_balance.update((k, float(v)) for k, v in current_balance.items())
@@ -191,6 +194,6 @@ def timed_job():
             logger_init()
         monitor_act()
     except:
-        logger.info('Error in main loop', exc_info=True)
+        logger.error('Error in main loop', exc_info=True)
 
 sched.start()
