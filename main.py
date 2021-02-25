@@ -4,7 +4,7 @@ import time
 import json
 import logging
 import os
-from logging import handlers
+import sys
 from apscheduler.schedulers.blocking import BlockingScheduler
 
 # Config comments:
@@ -41,15 +41,21 @@ def logger_init():
     logger.setLevel(logging.DEBUG)
 
     logfile_path = os.path.join(log_dir, 'runtime.log')
-    fh = logging.handlers.TimedRotatingFileHandler(filename=logfile_path, when='D', interval=1, backupCount=90, encoding='utf-8', delay=False)
+    fh = logging.FileHandler(filename=logfile_path)
     fh.setLevel(logging.DEBUG)
+
+    sh = logging.StreamHandler(sys.stdout)
+    sh.setLevel(logging.INFO)
 
     # create formatter and add it to the handlers
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     fh.setFormatter(formatter)
+    sh.setFormatter(formatter)
 
     # Add handler to the logger
     logger.addHandler(fh)
+    if 'DYNO' in os.environ:
+        logger.addHandler(sh)
 
     return logger
 
