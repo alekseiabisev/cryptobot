@@ -2,7 +2,7 @@ import krakenex
 import pandas as pd
 import time
 import json
-import logging
+import sys
 import os
 from logging import handlers
 from apscheduler.schedulers.blocking import BlockingScheduler
@@ -20,38 +20,12 @@ else:
     # For local environment
     kraken = krakenex.API()
     kraken.load_key('kraken.key')
-
+sys.stdout.write('Connected to API')
 
 # Load global variables from config file
 with open('config.json') as config_file:
     config = json.load(config_file)
 globals().update(config)
-
-
-def logger_init():
-    '''Events logger initialisation'''
-
-    # Create folder (check if exists) for logfiles
-    log_dir = 'log'
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-
-    # Create logger for application
-    logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
-
-    logfile_path = os.path.join(log_dir, 'runtime.log')
-    fh = logging.handlers.TimedRotatingFileHandler(filename=logfile_path, when='D', interval=1, backupCount=90, encoding='utf-8', delay=False)
-    fh.setLevel(logging.DEBUG)
-
-    # create formatter and add it to the handlers
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    fh.setFormatter(formatter)
-
-    # Add handler to the logger
-    logger.addHandler(fh)
-
-    return logger
 
 def monitor_act():
     # Get price data
@@ -75,7 +49,7 @@ def monitor_act():
     elif trend == 'sell' and required_crypto_amount < 0:
         add_order('sell', abs(required_crypto_amount))
     else:
-        logger.info('Trend is: '+trend+'. Buy/sell function is not called.')
+        sys.stdout.write('Trend is: '+trend+'. Buy/sell function is not called.')
 
 def get_balance():
     '''Returns json with balance'''
@@ -177,23 +151,18 @@ def add_order(type, amount):
 
     # Execute order
     res_data = kraken.query_private('AddOrder', req_data)
-    logger.info('Call '+type+' function: required amount: '+str(amount))
+    sys.stdout.write('Call '+type+' function: required amount: '+str(amount))
 
     return res_data
 
-
-logger = logger_init()
 
 sched = BlockingScheduler()
 
 @sched.scheduled_job('interval', minutes=1)
 def timed_job():
     try:
-        # Check if logger is active
-        if logging.getLogger().hasHandlers() == False:
-            logger_init()
         monitor_act()
     except:
-        logger.error('Error in main loop', exc_info=True)
+        sys.stdout.write('Error in main loop', exc_info=True)
 
 sched.start()
