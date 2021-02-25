@@ -5,7 +5,7 @@ import json
 import logging
 import os
 from logging import handlers
-
+from apscheduler.schedulers.blocking import BlockingScheduler
 
 # Config comments:
 # min_transaction_volume Consider replacing with API call information about user settings (if there is one)
@@ -177,12 +177,16 @@ def add_order(type, amount):
 
 logger = logger_init()
 
-try:
-    while True:
+sched = BlockingScheduler()
+
+@sched.scheduled_job('interval', minutes=1)
+def timed_job():
+    try:
         # Check if logger is active
         if logging.getLogger().hasHandlers() == False:
             logger_init()
         monitor_act()
-        time.sleep(60)
-except:
-    logger.info('Error in main loop', exc_info=True)
+    except:
+        logger.info('Error in main loop', exc_info=True)
+
+sched.start()
