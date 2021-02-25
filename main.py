@@ -13,7 +13,11 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 
 # Connect to Kraken
 kraken = krakenex.API()
-kraken.load_key("kraken.key")
+if 'KRAKEN_KEY' in os.environ:
+    kraken.load_key('KRAKEN_KEY')
+else:
+    kraken.load_key('kraken.key')
+
 
 # Load global variables from config file
 with open('config.json') as config_file:
