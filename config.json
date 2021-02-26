@@ -7,5 +7,7 @@
     "min_transaction_volume": 0.0002,
     "transaction_fee": 0.0026,
     "interval": 1,
-    "trend_length": 6
+    "trend_length": 6,
+    "ema_long": 20,
+    "ema_short": 10
 }

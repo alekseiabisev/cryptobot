@@ -114,8 +114,8 @@ def get_data(pair):
     df['time'] = pd.to_datetime(df['time'], unit='s')
 
     # Add exponential moving averages and signal column(ewm_diff): negative - bearish, positive - bullish
-    df['ewm_20'] = df['close'].ewm(span=20).mean()
-    df['ewm_10'] = df['close'].ewm(span=10).mean()
+    df['ewm_20'] = df['close'].ewm(span=ema_long).mean()
+    df['ewm_10'] = df['close'].ewm(span=ema_short).mean()
     df['ewm_diff'] = df['ewm_10'] - df['ewm_20']
 
     return df
