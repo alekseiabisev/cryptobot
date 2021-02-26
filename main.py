@@ -31,17 +31,11 @@ globals().update(config)
 def logger_init():
     '''Events logger initialisation'''
 
-    # Create folder (check if exists) for logfiles
-    log_dir = 'log'
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-
     # Create logger for application
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
 
-    logfile_path = os.path.join(log_dir, 'runtime.log')
-    fh = logging.FileHandler(filename=logfile_path)
+    fh = logging.FileHandler('runtime.log')
     fh.setLevel(logging.DEBUG)
 
     sh = logging.StreamHandler(sys.stdout)
@@ -53,10 +47,10 @@ def logger_init():
     sh.setFormatter(formatter)
 
     # Add handler to the logger
-    logger.addHandler(fh)
     if 'DYNO' in os.environ:
         logger.addHandler(sh)
-
+    else:
+        logger.addHandler(fh)
     return logger
 
 def monitor_act():
@@ -187,12 +181,6 @@ def add_order(type, amount):
 
     return res_data
 
-
-logger = logger_init()
-
-sched = BlockingScheduler()
-
-@sched.scheduled_job('interval', minutes=1)
 def timed_job():
     try:
         # Check if logger is active
@@ -202,4 +190,10 @@ def timed_job():
     except:
         logger.error('Error in main loop', exc_info=True)
 
+
+logger = logger_init()
+
+# Starting scheduler
+sched = BlockingScheduler()
+sched.add_job(timed_job, 'interval', minutes=1)
 sched.start()
