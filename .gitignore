@@ -15,6 +15,7 @@ LICENSE
 
 # Directory with logs
 /log
+*.log
 logging_config.ini
 
 /env

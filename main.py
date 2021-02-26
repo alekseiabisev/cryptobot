@@ -21,12 +21,10 @@ else:
     kraken = krakenex.API()
     kraken.load_key('kraken.key')
 
-
 # Load global variables from config file
 with open('config.json') as config_file:
     config = json.load(config_file)
 globals().update(config)
-
 
 def logger_init():
     '''Events logger initialisation'''
@@ -47,10 +45,10 @@ def logger_init():
     sh.setFormatter(formatter)
 
     # Add handler to the logger
+    logger.addHandler(fh)
     if 'DYNO' in os.environ:
         logger.addHandler(sh)
-    else:
-        logger.addHandler(fh)
+
     return logger
 
 def monitor_act():
@@ -190,10 +188,9 @@ def timed_job():
     except:
         logger.error('Error in main loop', exc_info=True)
 
-
 logger = logger_init()
 
-# Starting scheduler
+# Start scheduling
 sched = BlockingScheduler()
 sched.add_job(timed_job, 'interval', minutes=1)
 sched.start()
