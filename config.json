@@ -1,9 +1,10 @@
 {
     "trend_pair": "XXBTZUSD",
     "trading_pair": "XBTUSDT",
-    "crypto_trading_sumbol": "XXBT",
-    "money_trading_sumbol": "USDT",
+    "crypto_trading_symbol": "XXBT",
+    "money_trading_symbol": "USDT",
     "balance": 0.5,
+    "power": 5,
     "min_transaction_volume": 0.0002,
     "transaction_fee": 0.0026,
     "interval": 1,

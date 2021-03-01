@@ -58,33 +58,42 @@ def monitor_act():
     previous = df['ewm_diff'][-trend_length-1:-1]
     trend = check_trend(last, previous)
     price = float(df['close'][-1:])
+
     # Cancel all still not executed orders
     kraken.query_private('CancelAll')
+
     # Get current balances. Will be used to check if assets are in balance with a current price
-    current_balance = get_balance()
-    crypto_amount = current_balance[crypto_trading_sumbol]
-    money_amount = current_balance[money_trading_sumbol]
-    balance = round((crypto_amount * price) / (crypto_amount * price + money_amount),3)
-    required_crypto_amount = required_crypto(price,crypto_amount,money_amount)
+    balance = get_balance()
+    actual_crypto_amount, actual_money_amount = balance
+    actual_balance = round((actual_crypto_amount * price) / (actual_crypto_amount * price + actual_money_amount),3)
+
+    powered_balance = [power * symbol for symbol in balance]
+    powered_crypto_amount, powered_money_amount = powered_balance
+
+    required_crypto_amount = required_crypto(price, powered_crypto_amount, powered_money_amount)
+
     # Create a new order in case if it is a right time and there is a balance to allocate
     if trend == 'buy' and required_crypto_amount > 0:
         add_order('buy', abs(required_crypto_amount))
     elif trend == 'sell' and required_crypto_amount < 0:
         add_order('sell', abs(required_crypto_amount))
     else:
-        logger.info('Trend is: '+trend+'. Balance is: '+str(balance)+' Buy/sell function is not called.')
+        logger.info('Trend is: '+trend+'. Actual Balance is: '+str(actual_balance)+' Buy/sell function is not called.')
 
 def get_balance():
-    ''' Requesting balance of assets from Exchange.
+    ''' Requesting balance of assets from exchange.
 
     Returns:
-        json with balance.
+        list with balance: crypto, money
     '''
     res_balance = kraken.query_private('Balance')
     current_balance = res_balance['result']
     # Changing pair value type from string to float
     current_balance.update((k, float(v)) for k, v in current_balance.items())
-    return current_balance
+    # Applying power for our balance
+    crypto_amount = current_balance[crypto_trading_symbol]
+    money_amount = current_balance[money_trading_symbol]
+    return crypto_amount, money_amount
 
 def get_price(pair):
     '''Checks for the close ('c') price type of the pair.
