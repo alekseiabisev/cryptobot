@@ -60,14 +60,19 @@ def monitor_act():
     price = float(df['close'][-1:])
     # Cancel all still not executed orders
     kraken.query_private('CancelAll')
+    # Get current balances. Will be used to check if assets are in balance with a current price
+    current_balance = get_balance()
+    crypto_amount = current_balance[crypto_trading_sumbol]
+    money_amount = current_balance[money_trading_sumbol]
+    balance = round((crypto_amount * price) / (crypto_amount * price + money_amount),3)
+    required_crypto_amount = required_crypto(price,crypto_amount,money_amount)
     # Create a new order in case if it is a right time and there is a balance to allocate
-    required_crypto_amount = balancer(price)
     if trend == 'buy' and required_crypto_amount > 0:
         add_order('buy', abs(required_crypto_amount))
     elif trend == 'sell' and required_crypto_amount < 0:
         add_order('sell', abs(required_crypto_amount))
     else:
-        logger.info('Trend is: '+trend+'. Buy/sell function is not called.')
+        logger.info('Trend is: '+trend+'. Balance is: '+str(balance)+' Buy/sell function is not called.')
 
 def get_balance():
     ''' Requesting balance of assets from Exchange.
@@ -140,7 +145,7 @@ def check_trend(last, previous):
         return 'buy'
     return 'no action'
 
-def balancer(price):
+def required_crypto(price,crypto_amount,money_amount):
     ''' Returning required amount to balance portfolio
         Checks if it makes sense to change the balance based on minimum transactuion volume.
         And if potential revenue from trade will cover transaction fees.
@@ -151,10 +156,7 @@ def balancer(price):
     Returns:
         float of required amount of crypto (positive if we need to buy, negative if sell)
     '''
-    # Get current balances. Will be used to check if assets are in balance with a current price
-    current_balance = get_balance()
-    crypto_amount = current_balance[crypto_trading_sumbol]
-    money_amount = current_balance[money_trading_sumbol]
+
     required_crypto_amount = (crypto_amount + money_amount / price) * balance - crypto_amount
     #Comparing required amount ot buy/sell with minimum allowed volume
     if abs(required_crypto_amount) < min_transaction_volume:
