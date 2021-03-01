@@ -166,7 +166,7 @@ def required_crypto(price,crypto_amount,money_amount):
         float of required amount of crypto (positive if we need to buy, negative if sell)
     '''
 
-    required_crypto_amount = (crypto_amount + money_amount / price) * balance - crypto_amount
+    required_crypto_amount = ((crypto_amount + money_amount / price) * balance - crypto_amount) / power
     #Comparing required amount ot buy/sell with minimum allowed volume
     if abs(required_crypto_amount) < min_transaction_volume:
         return 0
@@ -186,7 +186,7 @@ def add_order(type, amount):
         amount: required amount of crypto to buy/sell
 
     Returns:
-        Exchnage response of execution.
+        Exchange response of execution.
     '''
     req_data = dict()
     req_data['type'] = type

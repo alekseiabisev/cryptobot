@@ -4,7 +4,7 @@
     "crypto_trading_symbol": "XXBT",
     "money_trading_symbol": "USDT",
     "balance": 0.5,
-    "power": 1,
+    "power": 4,
     "min_transaction_volume": 0.0002,
     "transaction_fee": 0.0026,
     "interval": 1,
