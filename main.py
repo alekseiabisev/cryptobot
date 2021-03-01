@@ -8,9 +8,9 @@ import sys
 from apscheduler.schedulers.blocking import BlockingScheduler
 
 # Config comments:
-# min_transaction_volume Consider replacing with API call information
+# MIN_TRANSACTION_VOLUME Consider replacing with API call information
 # about user settings (if there is one)
-# transaction_fee Consider replacing with API call:'TradeVolume'->fees->fee
+# TRANSACTION_FEE Consider replacing with API call:'TradeVolume'->fees->fee
 
 
 # Connect to Kraken
@@ -57,11 +57,11 @@ def monitor_act():
         in case it is a right time - executing trade orders.
     '''
     # Get price data
-    df = get_data(trend_pair)
+    df = get_data(TREND_PAIR)
     # Get exponential moving average trends difference (EMA 10 - EMA 20).
     # Form trade decision
     last = float(df['ewm_diff'][-1:])
-    previous = df['ewm_diff'][-trend_length-1:-1]
+    previous = df['ewm_diff'][-TREND_LENGTH-1:-1]
     trend = check_trend(last, previous)
     price = float(df['close'][-1:])
 
@@ -76,7 +76,7 @@ def monitor_act():
                            (actual_crypto_amount * price +
                            actual_money_amount), 3)
 
-    powered_balance = [power * symbol for symbol in balance]
+    powered_balance = [POWER * symbol for symbol in balance]
     powered_crypto_amount, powered_money_amount = powered_balance
 
     required_crypto_amount = required_crypto(price, powered_crypto_amount,
@@ -105,8 +105,8 @@ def get_balance():
     # Changing pair value type from string to float
     current_balance.update((k, float(v)) for k, v in current_balance.items())
     # Applying power for our balance
-    crypto_amount = current_balance[crypto_trading_symbol]
-    money_amount = current_balance[money_trading_symbol]
+    crypto_amount = current_balance[CRYPTO_TRADING_SYMBOL]
+    money_amount = current_balance[MONEY_TRADING_SYMBOL]
     return crypto_amount, money_amount
 
 
@@ -142,8 +142,8 @@ def get_data(pair):
     '''
     req_data = dict()
     req_data['pair'] = pair
-    req_data['interval'] = interval
-    req_data['since'] = time.time() - 3600*interval
+    req_data['interval'] = INTERVAL
+    req_data['since'] = time.time() - 3600*INTERVAL
     res_data = kraken.query_public('OHLC', req_data)
     # Load data to pandas dataframe
     df = pd.DataFrame(res_data['result'][req_data['pair']])
@@ -153,8 +153,8 @@ def get_data(pair):
     df['time'] = pd.to_datetime(df['time'], unit='s')
     # Add exponential moving averages and signal column(ewm_diff):
     # negative - bearish, positive - bullish
-    df['ewm_20'] = df['close'].ewm(span=ema_long).mean()
-    df['ewm_10'] = df['close'].ewm(span=ema_short).mean()
+    df['ewm_20'] = df['close'].ewm(span=EMA_LONG).mean()
+    df['ewm_10'] = df['close'].ewm(span=EMA_SHORT).mean()
     df['ewm_diff'] = df['ewm_10'] - df['ewm_20']
     return df
 
@@ -192,16 +192,16 @@ def required_crypto(price, crypto_amount, money_amount):
     '''
 
     required_crypto_amount = ((crypto_amount + money_amount / price)
-                              * balance - crypto_amount) / power
+                              * CONFIG_BALANCE - crypto_amount) / POWER
     # Comparing required amount ot buy/sell with minimum allowed volume
-    if abs(required_crypto_amount) < min_transaction_volume:
+    if abs(required_crypto_amount) < MIN_TRANSACTION_VOLUME:
         return 0
     # Comparing crypto assets avg price during last trade with current price
     # and checking if change percentage will covering transaction fees
     # transaction fee is doubled (in order to earn we need to buy and sell)
     elif (crypto_amount != 0
           and abs((money_amount / crypto_amount - price) / price)
-          <= transaction_fee*2):
+          <= TRANSACTION_FEE*2):
         return 0
 
     return required_crypto_amount
@@ -219,7 +219,7 @@ def add_order(type, amount):
     '''
     req_data = dict()
     req_data['type'] = type
-    req_data['pair'] = trading_pair
+    req_data['pair'] = TRADING_PAIR
     req_data['ordertype'] = 'market'
     req_data['trading_agreement'] = 'agree'
     req_data['volume'] = round(amount, 5)

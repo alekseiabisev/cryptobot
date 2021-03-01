@@ -1,14 +1,14 @@
 {
-    "trend_pair": "XXBTZUSD",
-    "trading_pair": "XBTUSDT",
-    "crypto_trading_symbol": "XXBT",
-    "money_trading_symbol": "USDT",
-    "balance": 0.5,
-    "power": 4,
-    "min_transaction_volume": 0.0002,
-    "transaction_fee": 0.0026,
-    "interval": 1,
-    "trend_length": 6,
-    "ema_long": 20,
-    "ema_short": 10
+    "TREND_PAIR": "XXBTZUSD",
+    "TRADING_PAIR": "XBTUSDT",
+    "CRYPTO_TRADING_SYMBOL": "XXBT",
+    "MONEY_TRADING_SYMBOL": "USDT",
+    "CONFIG_BALANCE": 0.5,
+    "POWER": 4,
+    "MIN_TRANSACTION_VOLUME": 0.0002,
+    "TRANSACTION_FEE": 0.0026,
+    "INTERVAL": 1,
+    "TREND_LENGTH": 6,
+    "EMA_LONG": 20,
+    "EMA_SHORT": 10
 }
