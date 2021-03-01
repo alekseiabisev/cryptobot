@@ -32,6 +32,11 @@ globals().update(config)
 def logger_init():
     ''' Logger initialisation
     '''
+
+    class NoRunningFilter(logging.Filter):
+        def filter(self, record):
+            return not record.name == 'apscheduler.executors.default'
+
     # Create logger for application
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
@@ -39,6 +44,9 @@ def logger_init():
     fh.setLevel(logging.DEBUG)
     sh = logging.StreamHandler(sys.stdout)
     sh.setLevel(logging.INFO)
+
+    my_filter = NoRunningFilter()
+    sh.addFilter(my_filter)
     # create formatter and add it to the handlers
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
