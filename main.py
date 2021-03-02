@@ -13,9 +13,32 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 # TRANSACTION_FEE Consider replacing with API call:'TradeVolume'->fees->fee
 
 
+def init_virtual_balance(power):
+    ''' Initialise required virtual balance.
+
+    Args:
+        power
+    Returns:
+        pair of numbers of required virtual balance
+    '''
+    virtual_crypto, virtual_money = 0, 0
+
+    # Get current actual balance
+    actual_crypto, actual_money = get_balance()
+    price = get_price(TRADING_PAIR)
+    actual_total = actual_crypto * price + actual_money
+    # Apply additional leverage
+    virtual_total = actual_total * (power - 1)
+
+    virtual_crypto = virtual_total * CONFIG_BALANCE / price
+    virtual_money = virtual_total * CONFIG_BALANCE
+
+    return virtual_crypto, virtual_money
+
+
 # Connect to Kraken
-# For Cloud environment
 if 'KRAKEN_KEY' in os.environ:
+    # For Cloud environment
     kraken = krakenex.API(os.environ['KRAKEN_KEY'],
                           os.environ['KRAKEN_SECRET'])
 else:
@@ -107,6 +130,7 @@ def get_balance():
     Returns:
         list with balance: crypto, money
     '''
+    crypto_amount, money_amount = 0, 0
     res_balance = kraken.query_private('Balance')
     current_balance = res_balance['result']
     # Changing pair value type from string to float
@@ -244,6 +268,10 @@ def timed_job():
         # Check if logger is active
         if not logging.getLogger().hasHandlers():
             logger_init()
+        # Check if virtual balance is required but not initialised
+        if POWER != 1 and ('virtual_balance' not in locals()
+                           or virtual_balance == (0, 0)):
+            virtual_balance = init_virtual_balance(POWER)
         monitor_act()
     except Exception:
         logger.error('Error in main loop', exc_info=True)
