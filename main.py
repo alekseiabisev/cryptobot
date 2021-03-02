@@ -225,7 +225,7 @@ def required_crypto(price, crypto_amount, money_amount):
     '''
 
     required_crypto_amount = ((crypto_amount + money_amount / price)
-                              * CONFIG_BALANCE - crypto_amount) / POWER
+                              * CONFIG_BALANCE - crypto_amount)
     # Comparing required amount ot buy/sell with minimum allowed volume
     if abs(required_crypto_amount) < MIN_TRANSACTION_VOLUME:
         return 0
