@@ -13,29 +13,6 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 # TRANSACTION_FEE Consider replacing with API call:'TradeVolume'->fees->fee
 
 
-def init_virtual_balance(power):
-    ''' Initialise required virtual balance.
-
-    Args:
-        power
-    Returns:
-        pair of numbers of required virtual balance
-    '''
-    virtual_crypto, virtual_money = 0, 0
-
-    # Get current actual balance
-    actual_crypto, actual_money = get_balance()
-    price = get_price(TRADING_PAIR)
-    actual_total = actual_crypto * price + actual_money
-    # Apply additional leverage
-    virtual_total = actual_total * (power - 1)
-
-    virtual_crypto = virtual_total * CONFIG_BALANCE / price
-    virtual_money = virtual_total * CONFIG_BALANCE
-
-    return virtual_crypto, virtual_money
-
-
 # Connect to Kraken
 if 'KRAKEN_KEY' in os.environ:
     # For Cloud environment
@@ -80,6 +57,29 @@ def logger_init():
     logger.addHandler(sh) if 'DYNO' in os.environ else logger.addHandler(fh)
 
     return logger
+
+
+def init_virtual_balance(power):
+    ''' Initialise required virtual balance.
+
+    Args:
+        power
+    Returns:
+        pair of numbers of required virtual balance
+    '''
+    virtual_crypto, virtual_money = 0, 0
+
+    # Get current actual balance
+    actual_crypto, actual_money = get_balance()
+    price = get_price(TRADING_PAIR)
+    actual_total = actual_crypto * price + actual_money
+    # Apply additional leverage
+    virtual_total = actual_total * (power - 1)
+
+    virtual_crypto = virtual_total * CONFIG_BALANCE / price
+    virtual_money = virtual_total * CONFIG_BALANCE
+
+    return virtual_crypto, virtual_money
 
 
 def monitor_act():
