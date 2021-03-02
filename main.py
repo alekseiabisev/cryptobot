@@ -101,17 +101,16 @@ def monitor_act():
     # Get current balances.
     # Will be used to check if assets are in balance with a current price
     balance = get_balance()
-    actual_crypto_amount, actual_money_amount = balance
-    actual_balance = round((actual_crypto_amount * price) /
-                           (actual_crypto_amount * price +
-                           actual_money_amount), 3)
+    crypto_amount, money_amount = balance
+    balance_percentage = round((crypto_amount * price) /
+                               (crypto_amount * price + money_amount), 3)
+    if 'virtual_balance' in globals():
+        virtual_crypto_amount, virtual_money_amount = virtual_balance
+        crypto_amount = crypto_amount + virtual_crypto_amount
+        money_amount = money_amount + virtual_money_amount
 
-    powered_balance = [POWER * symbol for symbol in balance]
-    powered_crypto_amount, powered_money_amount = powered_balance
-
-    required_crypto_amount = required_crypto(price, powered_crypto_amount,
-                                             powered_money_amount)
-
+    required_crypto_amount = required_crypto(price,
+                                             crypto_amount, money_amount)
     # Create a new order
     # in case if it is a right time and there is a balance to allocate
     if trend == 'buy' and required_crypto_amount > 0:
@@ -120,7 +119,7 @@ def monitor_act():
         add_order('sell', abs(required_crypto_amount))
     else:
         logger.info('Trend is: '+trend +
-                    '. Actual Balance is: '+str(actual_balance) +
+                    '. Actual Balance is: '+str(balance_percentage) +
                     ' Buy/sell function is not called.')
 
 
@@ -269,7 +268,7 @@ def timed_job():
         if not logging.getLogger().hasHandlers():
             logger_init()
         # Check if virtual balance is required but not initialised
-        if POWER != 1 and ('virtual_balance' not in locals()
+        if POWER != 1 and ('virtual_balance' not in globals()
                            or virtual_balance == (0, 0)):
             virtual_balance = init_virtual_balance(POWER)
         monitor_act()
