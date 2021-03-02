@@ -40,6 +40,7 @@ def logger_init():
     # Create logger for application
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
+    # Adding handlers
     fh = logging.FileHandler('runtime.log')
     fh.setLevel(logging.DEBUG)
     sh = logging.StreamHandler(sys.stdout)
@@ -53,9 +54,7 @@ def logger_init():
     fh.setFormatter(formatter)
     sh.setFormatter(formatter)
     # Add handler to the logger
-    logger.addHandler(fh)
-    if 'DYNO' in os.environ:
-        logger.addHandler(sh)
+    logger.addHandler(sh) if 'DYNO' in os.environ else logger.addHandler(fh)
 
     return logger
 
