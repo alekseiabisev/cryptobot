@@ -78,8 +78,8 @@ def init_virtual_balance(power):
 
     virtual_crypto = virtual_total * CONFIG_BALANCE / price
     virtual_money = virtual_total * CONFIG_BALANCE
-    logger.info('Virtual balance initialised '+str(round(virtual_crypto, 3)) +
-                ' | '+str(round(virtual_money, 0)))
+    logger.info(f'Virtual balance initialised: {virtual_crypto:0.3} | '
+                f'{virtual_money:.0f}')
 
     return virtual_crypto, virtual_money
 
@@ -104,13 +104,13 @@ def monitor_act():
     # Will be used to check if assets are in balance with a current price
     balance = get_balance()
     crypto_amount, money_amount = balance
-    balance_percentage = round((crypto_amount * price) /
-                               (crypto_amount * price + money_amount), 5)
+    balance_percentage = \
+        (crypto_amount * price) / (crypto_amount * price + money_amount)
     if 'virtual_balance' in globals():
         crypto_amount += virtual_balance[0]
         money_amount += virtual_balance[1]
-    virtual_balance_percentage = round((crypto_amount * price) /
-                                       (crypto_amount * price + money_amount), 5)
+    virtual_balance_percentage = \
+        crypto_amount * price / (crypto_amount * price + money_amount)
     required_crypto_amount = required_crypto(price,
                                              crypto_amount, money_amount)
     # Create a new order
@@ -120,10 +120,10 @@ def monitor_act():
     elif trend == 'sell' and required_crypto_amount < 0:
         add_order('sell', abs(required_crypto_amount))
     else:
-        logger.info('Trend is: '+trend +
-                    '. Actual Balance is: '+str(balance_percentage) +
-                    '. Virtual Balance is: '+str(virtual_balance_percentage) +
-                    '. Buy/sell function is not called.')
+        logger.info(f'Trend is: {trend}, '
+                    f'Actual Balance is: {balance_percentage:0.2%}. '
+                    f'Virtual Balance is: {virtual_balance_percentage:0.2%}. '
+                    f'Buy/sell function is not called.')
 
 
 def get_balance():
@@ -258,7 +258,7 @@ def add_order(type, amount):
     req_data['volume'] = round(amount, 5)
     # Execute order
     res_data = kraken.query_private('AddOrder', req_data)
-    logger.info('Call '+type+' function: required amount: '+str(amount))
+    logger.info(f'Call {type} function. Required amount: {amount}')
     return res_data
 
 
