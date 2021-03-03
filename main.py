@@ -74,10 +74,10 @@ def init_virtual_balance(power):
     price = get_price(TRADING_PAIR)
     actual_total = actual_crypto * price + actual_money
     # Apply additional leverage
-    virtual_total = actual_total * (power - 1)
+    balance_total = actual_total * power
 
-    virtual_crypto = virtual_total * CONFIG_BALANCE / price
-    virtual_money = virtual_total * CONFIG_BALANCE
+    virtual_crypto = balance_total * CONFIG_BALANCE / price - actual_crypto
+    virtual_money = balance_total * CONFIG_BALANCE - actual_money
     logger.info(f'Virtual balance initialised: {virtual_crypto:0.3} | '
                 f'{virtual_money:.0f}')
 
