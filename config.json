@@ -8,7 +8,17 @@
     "MIN_TRANSACTION_VOLUME": 0.0002,
     "TRANSACTION_FEE": 0.0026,
     "INTERVAL": 1,
-    "TREND_LENGTH": 6,
-    "EMA_LONG": 20,
-    "EMA_SHORT": 10
+    "EWM":
+        {
+            "WINDOW_LENGTH": 6,
+            "LONG": 20,
+            "SHORT": 10
+        },
+    "RSI":
+        {
+            "TYPE": "ewm",
+            "WINDOW_LENGTH": 14,
+            "OVERBOUGHT": 80,
+            "OVERSOLD": 20
+        }
 }

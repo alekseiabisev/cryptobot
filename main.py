@@ -97,8 +97,8 @@ def monitor_act():
 
     # Check EWM signal
     last = df['ewm_diff'][-1:].values[0]
-    previous = df['ewm_diff'][-TREND_LENGTH-1:-1]
-    trend = check_trend(last, previous)
+    previous = df['ewm_diff'][-EWM['WINDOW_LENGTH']-1:-1]
+    ewm_signal = check_ewm_signal(last, previous)
 
     # Check RSI signal
     last_rsi = df['rsi_ewm'][-1:].values[0]
@@ -124,12 +124,12 @@ def monitor_act():
                                              crypto_amount, money_amount)
     # Create a new order
     # in case if it is a right time and there is a balance to allocate
-    if trend == 'buy' and required_crypto_amount > 0:
+    if ewm_signal == 'buy' and required_crypto_amount > 0:
         add_order('buy', abs(required_crypto_amount))
-    elif trend == 'sell' and required_crypto_amount < 0:
+    elif ewm_signal == 'sell' and required_crypto_amount < 0:
         add_order('sell', abs(required_crypto_amount))
     else:
-        logger.info(f'Trend is: {trend}, '
+        logger.info(f'Ewm signal is: {ewm_signal}, '
                     f'Actual Balance is: {balance_percentage:0.2%}. '
                     f'Virtual Balance is: {virtual_balance_percentage:0.2%}. '
                     f'Buy/sell function is not called.')
@@ -210,8 +210,8 @@ def add_technical_indicators(df):
         less than 30 - oversold -> buy; more than 70 - overbought -> sell
     '''
     # Add Exponential weighted moving average (ewm)
-    df['ewm_20'] = df['close'].ewm(span=EMA_LONG).mean()
-    df['ewm_10'] = df['close'].ewm(span=EMA_SHORT).mean()
+    df['ewm_20'] = df['close'].ewm(span=EWM['LONG']).mean()
+    df['ewm_10'] = df['close'].ewm(span=EWM['SHORT']).mean()
     # Calculate difference between short and long EWM
     df['ewm_diff'] = df['ewm_10'] - df['ewm_20']
 
@@ -252,7 +252,7 @@ def check_rsi_signal(rsi):
     return rsi_signal
 
 
-def check_trend(last, previous):
+def check_ewm_signal(last, previous):
     ''' Determines call to action based on received trends.
 
     Args:
