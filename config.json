@@ -10,15 +10,15 @@
     "INTERVAL": 1,
     "EWM":
         {
-            "WINDOW_LENGTH": 6,
-            "LONG": 20,
-            "SHORT": 10
+            "window_length": 6,
+            "long": 20,
+            "short": 10
         },
     "RSI":
         {
-            "TYPE": "ewm",
-            "WINDOW_LENGTH": 14,
-            "OVERBOUGHT": 80,
-            "OVERSOLD": 20
+            "type": "ewm",
+            "window_length": 14,
+            "overbought_level": 80,
+            "oversold_level": 20
         }
 }

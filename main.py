@@ -97,11 +97,11 @@ def monitor_act():
 
     # Check EWM signal
     last = df['ewm_diff'][-1:].values[0]
-    previous = df['ewm_diff'][-EWM['WINDOW_LENGTH']-1:-1]
+    previous = df['ewm_diff'][-EWM['window_length']-1:-1]
     ewm_signal = check_ewm_signal(last, previous)
 
     # Check RSI signal
-    last_rsi = df['rsi_ewm'][-1:].values[0]
+    last_rsi = df['rsi'][-1:].values[0]
     rsi_signal = check_rsi_signal(last_rsi)
 
     # Cancel all still not executed orders
@@ -210,14 +210,14 @@ def add_technical_indicators(df):
         less than 30 - oversold -> buy; more than 70 - overbought -> sell
     '''
     # Add Exponential weighted moving average (ewm)
-    df['ewm_20'] = df['close'].ewm(span=EWM['LONG']).mean()
-    df['ewm_10'] = df['close'].ewm(span=EWM['SHORT']).mean()
+    df['ewm_20'] = df['close'].ewm(span=EWM['long']).mean()
+    df['ewm_10'] = df['close'].ewm(span=EWM['short']).mean()
     # Calculate difference between short and long EWM
     df['ewm_diff'] = df['ewm_10'] - df['ewm_20']
 
     # Add Relative strength index (RSI)
     # Hardcode windows length
-    window_length = 14
+    window_length = RSI['window_length']
     # Get the difference in price from previous step
     delta = df['close'].diff()
     # Make the positive gains (up) and negative gains (down) Series
@@ -228,12 +228,17 @@ def add_technical_indicators(df):
     roll_up1 = up.ewm(span=window_length).mean()
     roll_down1 = down.abs().ewm(span=window_length).mean()
     # Calculate the RSI based on EWMA
-    df['rsi_ewm'] = 100.0 - (100.0 / (1.0 + roll_up1 / roll_down1))
+    rsi_ewm = 100.0 - (100.0 / (1.0 + roll_up1 / roll_down1))
     # Calculate the SMA
     roll_up2 = up.rolling(window_length).mean()
     roll_down2 = down.abs().rolling(window_length).mean()
     # Calculate the RSI based on SMA
-    df['rsi_sma'] = 100.0 - (100.0 / (1.0 + roll_up2 / roll_down2))
+    rsi_sma = 100.0 - (100.0 / (1.0 + roll_up2 / roll_down2))
+    # Add RSI type based on configuration settings
+    if RSI['type'] == 'ewm':
+        df['rsi'] = rsi_ewm
+    elif RSI['type'] == 'sma':
+        df['rsi'] = rsi_sma
 
     return df
 
@@ -241,10 +246,10 @@ def add_technical_indicators(df):
 def check_rsi_signal(rsi):
     ''' float -> str
 
-        Check RSI signal'''
-    if rsi < 20:
+        Determine call to action based on RSI level.'''
+    if rsi < RSI['oversold_level']:
         rsi_signal = 'buy'
-    elif rsi > 80:
+    elif rsi > RSI['overbought_level']:
         rsi_signal = 'sell'
     else:
         rsi_signal = 'no action'
