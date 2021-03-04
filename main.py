@@ -92,12 +92,17 @@ def monitor_act():
     df = get_data(TREND_PAIR)
     # Add add technical indicators to dataframe
     df = add_technical_indicators(df)
-    # Get exponential moving average trends difference (EMA 10 - EMA 20).
-    # Form trade decision
+    # Get last price
+    price = df['close'][-1:].values[0]
+
+    # Check EWM signal
     last = df['ewm_diff'][-1:].values[0]
     previous = df['ewm_diff'][-TREND_LENGTH-1:-1]
     trend = check_trend(last, previous)
-    price = df['close'][-1:].values[0]
+
+    # Check RSI signal
+    last_rsi = df['rsi_ewm'][-1:].values[0]
+    rsi_signal = check_rsi_signal(last_rsi)
 
     # Cancel all still not executed orders
     kraken.query_private('CancelAll')
@@ -108,11 +113,13 @@ def monitor_act():
     crypto_amount, money_amount = balance
     balance_percentage = \
         (crypto_amount * price) / (crypto_amount * price + money_amount)
+    # Add virtual balance to actual balamce
     if 'virtual_balance' in globals():
         crypto_amount += virtual_balance[0]
         money_amount += virtual_balance[1]
     virtual_balance_percentage = \
         crypto_amount * price / (crypto_amount * price + money_amount)
+    # Calculate required crypto amount
     required_crypto_amount = required_crypto(price,
                                              crypto_amount, money_amount)
     # Create a new order
@@ -229,6 +236,20 @@ def add_technical_indicators(df):
     df['rsi_sma'] = 100.0 - (100.0 / (1.0 + roll_up2 / roll_down2))
 
     return df
+
+
+def check_rsi_signal(rsi):
+    ''' float -> str
+
+        Check RSI signal'''
+    if rsi < 20:
+        rsi_signal = 'buy'
+    elif rsi > 80:
+        rsi_signal = 'sell'
+    else:
+        rsi_signal = 'no action'
+
+    return rsi_signal
 
 
 def check_trend(last, previous):
