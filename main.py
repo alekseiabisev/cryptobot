@@ -90,6 +90,8 @@ def monitor_act():
     '''
     # Get price data
     df = get_data(TREND_PAIR)
+    # Add add technical indicators to dataframe
+    df = add_technical_indicators(df)
     # Get exponential moving average trends difference (EMA 10 - EMA 20).
     # Form trade decision
     last = df['ewm_diff'][-1:].values[0]
@@ -163,7 +165,8 @@ def get_price(pair):
 
 
 def get_data(pair):
-    ''' Requesting data for the last 60 periods starting from now from Kraken
+    ''' str -> dataframe
+        Requesting data for the last 60 periods starting from now from Kraken
         Converts response to pandas DataFrame
         Adds short, long EMA. Calculates short and long EMA diff.
 
@@ -187,11 +190,44 @@ def get_data(pair):
     # Convert other columns to nummeric
     cols = df.columns.drop('time')
     df[cols] = df[cols].apply(pd.to_numeric, errors='coerce')
-    # Add exponential moving averages and signal column(ewm_diff):
-    # negative - bearish, positive - bullish
+
+    return df
+
+
+def add_technical_indicators(df):
+    ''' dataframe -> dataframe
+
+        Add exponential moving averages and signal column(ewm_diff):
+        negative - bearish; positive - bullish
+        Add RSI indicators based on EWM and SMA:
+        less than 30 - oversold -> buy; more than 70 - overbought -> sell
+    '''
+    # Add Exponential weighted moving average (ewm)
     df['ewm_20'] = df['close'].ewm(span=EMA_LONG).mean()
     df['ewm_10'] = df['close'].ewm(span=EMA_SHORT).mean()
+    # Calculate difference between short and long EWM
     df['ewm_diff'] = df['ewm_10'] - df['ewm_20']
+
+    # Add Relative strength index (RSI)
+    # Hardcode windows length
+    window_length = 14
+    # Get the difference in price from previous step
+    delta = df['close'].diff()
+    # Make the positive gains (up) and negative gains (down) Series
+    up, down = delta.copy(), delta.copy()
+    up[up < 0] = 0
+    down[down > 0] = 0
+    # Calculate the EWMA
+    roll_up1 = up.ewm(span=window_length).mean()
+    roll_down1 = down.abs().ewm(span=window_length).mean()
+    # Calculate the RSI based on EWMA
+    df['rsi_ewm'] = 100.0 - (100.0 / (1.0 + roll_up1 / roll_down1))
+    # Calculate the SMA
+    roll_up2 = up.rolling(window_length).mean()
+    roll_down2 = down.abs().rolling(window_length).mean()
+    # Calculate the RSI based on SMA
+    df['rsi_sma'] = 100.0 - (100.0 / (1.0 + roll_up2 / roll_down2))
+
     return df
 
 
