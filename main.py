@@ -92,10 +92,10 @@ def monitor_act():
     df = get_data(TREND_PAIR)
     # Get exponential moving average trends difference (EMA 10 - EMA 20).
     # Form trade decision
-    last = float(df['ewm_diff'][-1:])
+    last = df['ewm_diff'][-1:].values[0]
     previous = df['ewm_diff'][-TREND_LENGTH-1:-1]
     trend = check_trend(last, previous)
-    price = float(df['close'][-1:])
+    price = df['close'][-1:].values[0]
 
     # Cancel all still not executed orders
     kraken.query_private('CancelAll')
@@ -184,6 +184,9 @@ def get_data(pair):
                   'close', 'vwap', 'volume', 'count']
     # Convert unix time to readable time
     df['time'] = pd.to_datetime(df['time'], unit='s')
+    # Convert other columns to nummeric
+    cols = df.columns.drop('time')
+    df[cols] = df[cols].apply(pd.to_numeric, errors='coerce')
     # Add exponential moving averages and signal column(ewm_diff):
     # negative - bearish, positive - bullish
     df['ewm_20'] = df['close'].ewm(span=EMA_LONG).mean()
