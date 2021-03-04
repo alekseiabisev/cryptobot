@@ -133,7 +133,9 @@ def monitor_act():
 
     # Create a new order
     # in case if it is a right time and there is a balance to allocate
-    if amount == 0:
+    if ewm_signal == 'no action' and rsi_signal == 'no action':
+        logger.info(f'No action. No trade signal')
+    elif amount == 0:
         logger.info(f'No action. Reason: {reason}')
     elif (ewm_signal == 'buy' or rsi_signal == 'buy') and amount > 0:
         add_order('buy', abs(required_crypto_amount))
