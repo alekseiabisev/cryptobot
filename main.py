@@ -119,9 +119,12 @@ def monitor_act():
         money_amount += virtual_balance[1]
     virtual_balance_percentage = \
         crypto_amount * price / (crypto_amount * price + money_amount)
+
     # Calculate required crypto amount
-    required_crypto_amount = required_crypto(price,
-                                             crypto_amount, money_amount)
+    required_crypto = calculate_required_crypto(price, crypto_amount,
+                                                money_amount)
+    amount = required_crypto['amount']
+    reason = required_crypto['reason']
 
     logger.info(f'EWM signal is: {ewm_signal}, '
                 f'RSI signal is: {rsi_signal}, '
@@ -130,9 +133,11 @@ def monitor_act():
 
     # Create a new order
     # in case if it is a right time and there is a balance to allocate
-    if (ewm_signal == 'buy' or rsi_signal == 'buy') and required_crypto_amount > 0:
+    if amount == 0:
+        logger.info(f'No action. Reason: {reason}')
+    elif (ewm_signal == 'buy' or rsi_signal == 'buy') and amount > 0:
         add_order('buy', abs(required_crypto_amount))
-    elif (ewm_signal == 'sell' or rsi_signal == 'sell') and required_crypto_amount < 0:
+    elif (ewm_signal == 'sell' or rsi_signal == 'sell') and amount < 0:
         add_order('sell', abs(required_crypto_amount))
     else:
         logger.info(f'No action.')
@@ -278,34 +283,34 @@ def check_ewm_signal(last, previous):
     return 'no action'
 
 
-def required_crypto(price, crypto_amount, money_amount):
-    ''' Returning required amount to balance portfolio
+def calculate_required_crypto(price, crypto_amount, money_amount):
+    ''' (float, float, float) -> (float, str)
+
+        Returning required amount to balance portfolio
         Checks if it makes sense to change the balance based on minimum
         transaction volume.
         And if potential revenue from trade will cover transaction fees.
-
-    Args:
-        price: current price of the targeted crypto asset
-
-    Returns:
-        float of required amount of crypto
-        (positive if we need to buy, negative if sell)
+        In case if trade is not required also returns reason.
     '''
+    # Calculate potentially required crypto amount
+    required_amount = ((crypto_amount + money_amount / price)
+                       * CONFIG_BALANCE - crypto_amount)
+    res = {'amount': required_amount, 'reason': ''}
 
-    required_crypto_amount = ((crypto_amount + money_amount / price)
-                              * CONFIG_BALANCE - crypto_amount)
     # Comparing required amount ot buy/sell with minimum allowed volume
-    if abs(required_crypto_amount) < MIN_TRANSACTION_VOLUME:
-        return 0
+    if abs(required_amount) < MIN_TRANSACTION_VOLUME:
+        res['amount'] = 0
+        res['reason'] = 'Required amount is below minimum transaction volume'
     # Comparing crypto assets avg price during last trade with current price
     # and checking if change percentage will covering transaction fees
     # transaction fee is doubled (in order to earn we need to buy and sell)
     elif (crypto_amount != 0
           and abs((money_amount / crypto_amount - price) / price)
           <= TRANSACTION_FEE*2):
-        return 0
+        res['amount'] = 0
+        res['reason'] = "Potential revenue won't cover transactionfees"
 
-    return required_crypto_amount
+    return res
 
 
 def add_order(type, amount):
