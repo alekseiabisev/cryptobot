@@ -122,17 +122,20 @@ def monitor_act():
     # Calculate required crypto amount
     required_crypto_amount = required_crypto(price,
                                              crypto_amount, money_amount)
+
+    logger.info(f'EWM signal is: {ewm_signal}, '
+                f'RSI signal is: {rsi_signal}, '
+                f'Actual Balance is: {balance_percentage:0.2%}. '
+                f'Virtual Balance is: {virtual_balance_percentage:0.2%}.')
+
     # Create a new order
     # in case if it is a right time and there is a balance to allocate
-    if ewm_signal == 'buy' and required_crypto_amount > 0:
+    if (ewm_signal == 'buy' or rsi_signal == 'buy') and required_crypto_amount > 0:
         add_order('buy', abs(required_crypto_amount))
-    elif ewm_signal == 'sell' and required_crypto_amount < 0:
+    elif (ewm_signal == 'sell' or rsi_signal == 'sell') and required_crypto_amount < 0:
         add_order('sell', abs(required_crypto_amount))
     else:
-        logger.info(f'Ewm signal is: {ewm_signal}, '
-                    f'Actual Balance is: {balance_percentage:0.2%}. '
-                    f'Virtual Balance is: {virtual_balance_percentage:0.2%}. '
-                    f'Buy/sell function is not called.')
+        logger.info(f'No action.')
 
 
 def get_balance():
