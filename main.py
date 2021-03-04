@@ -138,9 +138,9 @@ def monitor_act():
     elif amount == 0:
         logger.info(f'No action. Reason: {reason}')
     elif (ewm_signal == 'buy' or rsi_signal == 'buy') and amount > 0:
-        add_order('buy', abs(required_crypto_amount))
+        add_order('buy', abs(amount))
     elif (ewm_signal == 'sell' or rsi_signal == 'sell') and amount < 0:
-        add_order('sell', abs(required_crypto_amount))
+        add_order('sell', abs(amount))
     else:
         logger.info(f'No action.')
 
