@@ -6,6 +6,7 @@ import sys
 import json
 from datetime import datetime
 from apscheduler.schedulers.blocking import BlockingScheduler
+from database import execute_sql
 
 # Config comments:
 # MIN_TRANSACTION_VOLUME Consider replacing with API call information
@@ -138,9 +139,9 @@ def monitor_act():
     elif amount == 0:
         logger.info(f'No action. Reason: {reason}')
     elif (ewm_signal == 'buy' or rsi_signal == 'buy') and amount > 0:
-        add_order('buy', abs(amount))
+        add_order('buy', abs(amount), price)
     elif (ewm_signal == 'sell' or rsi_signal == 'sell') and amount < 0:
-        add_order('sell', abs(amount))
+        add_order('sell', abs(amount), price)
     else:
         logger.info(f'No action.')
 
@@ -315,15 +316,15 @@ def calculate_required_crypto(price, crypto_amount, money_amount):
     return res
 
 
-def add_order(type, amount):
-    ''' Sending an order to Exchange.
+def add_order(type, amount, price):
+    ''' (str, float, float) -> None
+        Send an order to Exchange.
+        Add order transaction information to database
 
     Args:
         type: string buy/sell
         amount: required amount of crypto to buy/sell
-
-    Returns:
-        Exchange response of execution.
+        price:
     '''
     req_data = dict()
     req_data['type'] = type
@@ -331,10 +332,23 @@ def add_order(type, amount):
     req_data['ordertype'] = 'market'
     req_data['trading_agreement'] = 'agree'
     req_data['volume'] = round(amount, 5)
+
     # Execute order
     res_data = kraken.query_private('AddOrder', req_data)
+
+    # Add logger entry
     logger.info(f'Call {type} function. Required amount: {amount}')
-    return res_data
+
+    # Add entry to database
+    if 'result' in res_data:
+        txid = res_data['result']['txid'][0]
+        dt = datetime.now()
+        pair = TRADING_PAIR
+        sql = "INSERT INTO trades \
+               (txid, created_at, pair, type, expected_price, status) \
+               VALUES (%s, %s, %s, %s, %s, %s);"
+        data = (txid, dt, pair, type, price, 'created')
+        execute_sql(sql, data)
 
 
 def timed_job():
