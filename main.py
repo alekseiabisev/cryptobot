@@ -1,10 +1,10 @@
 import krakenex
 import pandas as pd
-import time
-import json
 import logging
 import os
 import sys
+import json
+from datetime import datetime
 from apscheduler.schedulers.blocking import BlockingScheduler
 
 # Config comments:
@@ -196,7 +196,7 @@ def get_data(pair):
     req_data = dict()
     req_data['pair'] = pair
     req_data['interval'] = INTERVAL
-    req_data['since'] = time.time() - 3600*INTERVAL
+    req_data['since'] = datetime.now().timestamp() - 3600*INTERVAL
     res_data = kraken.query_public('OHLC', req_data)
     # Load data to pandas dataframe
     df = pd.DataFrame(res_data['result'][req_data['pair']])
