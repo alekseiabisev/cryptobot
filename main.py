@@ -6,7 +6,7 @@ import sys
 import json
 from datetime import datetime
 from apscheduler.schedulers.blocking import BlockingScheduler
-from database import execute_sql
+import database as db
 
 # Config comments:
 # MIN_TRANSACTION_VOLUME Consider replacing with API call information
@@ -344,11 +344,11 @@ def add_order(type, amount, price):
         txid = res_data['result']['txid'][0]
         dt = datetime.now()
         pair = TRADING_PAIR
-        sql = "INSERT INTO trades \
+        statement = "INSERT INTO trades \
                (txid, created_at, pair, type, expected_price, status) \
                VALUES (%s, %s, %s, %s, %s, %s);"
         data = (txid, dt, pair, type, price, 'created')
-        execute_sql(sql, data)
+        db.execute_sql(statement, data)
 
 
 def timed_job():
@@ -370,6 +370,24 @@ logger = logger_init()
 if POWER != 1 and ('virtual_balance' not in globals()
                    or virtual_balance == (0, 0)):
     virtual_balance = init_virtual_balance(POWER)
+
+# Check if required database tables exist
+if db.check_table_exists('trades') is False:
+    statement = (
+        """
+        CREATE TABLE trades (
+            id SERIAL PRIMARY KEY,
+            txid VARCHAR(255),
+            created_at TIMESTAMPTZ,
+            pair VARCHAR(255),
+            type VARCHAR(255),
+            signal VARCHAR(255),
+            expected_price DECIMAL,
+            status VARCHAR(255),
+            actual_price DECIMAL
+        )
+        """)
+    db.execute_sql(statement)
 
 # Start scheduling
 sched = BlockingScheduler()

@@ -32,28 +32,30 @@ def execute_sql(statement, parameters=''):
         conn.commit()
         # close communication with the PostgreSQL database server
         cur.close()
-        return('Done')
+        return 'Done'
 
     finally:
         if conn is not None:
             conn.close()
 
 
-# sql1 = (
-#     """
-#     CREATE TABLE trades (
-#         id SERIAL PRIMARY KEY,
-#         txid VARCHAR(255),
-#         created_at TIMESTAMPTZ,
-#         pair VARCHAR(255),
-#         type VARCHAR(255),
-#         signal VARCHAR(255),
-#         expected_price DECIMAL,
-#         status VARCHAR(255),
-#         actual_price DECIMAL
-#     )
-#     """)
+def check_table_exists(tablename):
+    ''' str -> bool
+
+        Checks if table exists in the database
+    '''
+    conn = connect()
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) \
+                 FROM information_schema.tables \
+                 WHERE table_name = %s", (tablename,))
+    if cur.fetchone()[0] == 1:
+        cur.close()
+        return True
+
+    cur.close()
+    return False
 
 
-if __name__ == '__main__':
-    None
+# if __name__ == '__main__':
+#     check_table_exists('trades')
