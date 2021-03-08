@@ -344,7 +344,7 @@ def add_order(type, amount, price):
         txid = res_data['result']['txid'][0]
         dt = datetime.now()
         pair = TRADING_PAIR
-        statement = "INSERT INTO trades \
+        statement = "INSERT INTO orders \
                (txid, created_at, pair, type, expected_price, status) \
                VALUES (%s, %s, %s, %s, %s, %s);"
         data = (txid, dt, pair, type, price, 'created')
@@ -363,7 +363,7 @@ def timed_job():
     except Exception:
         logger.error('Error in main loop', exc_info=True)
 
-
+# Initialise logging
 logger = logger_init()
 
 # Check if virtual balance is required but not initialised
@@ -372,10 +372,10 @@ if POWER != 1 and ('virtual_balance' not in globals()
     virtual_balance = init_virtual_balance(POWER)
 
 # Check if required database tables exist
-if db.check_table_exists('trades') is False:
+if db.check_table_exists('orders') is False:
     statement = (
         """
-        CREATE TABLE trades (
+        CREATE TABLE orders (
             id SERIAL PRIMARY KEY,
             txid VARCHAR(255),
             created_at TIMESTAMPTZ,
