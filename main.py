@@ -309,7 +309,7 @@ def calculate_required_crypto(price, crypto_amount, money_amount):
     # transaction fee is doubled (in order to earn we need to buy and sell)
     elif (crypto_amount != 0
           and abs((money_amount / crypto_amount - price) / price)
-          <= TRANSACTION_FEE*2):
+          <= TRANSACTION_FEE*4):
         res['amount'] = 0
         res['reason'] = "Potential revenue won't cover transactionfees"
 
