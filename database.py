@@ -14,47 +14,45 @@ def connect():
     return conn
 
 
-def execute_sql(statement, parameters=''):
-    ''' str, tuple -> str
+def execute_sql(statement, statement_data=''):
+    ''' str, tuple -> None
 
-    Execute sql query with given data load '''
+        Execute sql query with given data load.
+        To be used for changers requiring commit and not returning anything
+        (INSERT, UPDATE, CREATE)
+    '''
 
     conn = None
     try:
-        # connect to the PostgreSQL server
         conn = connect()
-        # create a cursor
         cur = conn.cursor()
-        # execute a statement
-        # for command in commands:
-        cur.execute(statement, parameters)
-        # commit the changes
+        cur.execute(statement, statement_data)
         conn.commit()
-        # close communication with the PostgreSQL database server
         cur.close()
-        return 'Done'
-
     finally:
         if conn is not None:
             conn.close()
 
 
-def check_table_exists(tablename):
-    ''' str -> bool
+def execute_fetch_sql(statement, statement_data=''):
+    ''' str, tuple -> list of tuples
 
-        Checks if table exists in the database
+        Execute sql query with given data load
+        And fetch given answer. To be used for SELECT statements
     '''
-    conn = connect()
-    cur = conn.cursor()
-    cur.execute("SELECT COUNT(*) \
-                 FROM information_schema.tables \
-                 WHERE table_name = %s", (tablename,))
-    if cur.fetchone()[0] == 1:
-        cur.close()
-        return True
 
-    cur.close()
-    return False
+    conn = None
+    try:
+        conn = connect()
+        cur = conn.cursor()
+        cur.execute(statement, statement_data)
+        query_res = cur.fetchall()
+        cur.close()
+        return query_res
+
+    finally:
+        if conn is not None:
+            conn.close()
 
 
 # if __name__ == '__main__':
