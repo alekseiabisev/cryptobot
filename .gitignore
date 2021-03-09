@@ -22,3 +22,8 @@ logging_config.ini
 
 # Other
 .gcloudignore
+
+
+*.py[cod]
+*$py.class
+__pycache__

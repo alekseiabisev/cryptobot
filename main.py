@@ -4,7 +4,7 @@ import logging
 import os
 import sys
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from apscheduler.schedulers.blocking import BlockingScheduler
 import database as db
 
@@ -318,6 +318,7 @@ def calculate_required_crypto(price, crypto_amount, money_amount):
 
 def add_order(type, amount, price):
     ''' (str, float, float) -> None
+
         Send an order to Exchange.
         Add order transaction information to database
 
@@ -344,11 +345,49 @@ def add_order(type, amount, price):
         txid = res_data['result']['txid'][0]
         dt = datetime.now()
         pair = TRADING_PAIR
-        statement = "INSERT INTO orders \
-               (txid, created_at, pair, type, expected_price, status) \
-               VALUES (%s, %s, %s, %s, %s, %s);"
-        data = (txid, dt, pair, type, price, 'created')
-        db.execute_sql(statement, data)
+        statement = """
+                    INSERT INTO trades
+                    (txid, created_at, pair, type, expected_price, status)
+                    VALUES (%s, %s, %s, %s, %s, %s);
+                    """
+        statement_data = (txid, dt, pair, type, price, 'created')
+        db.execute_sql(statement, statement_data)
+
+
+def update_orders_data():
+    ''' None -> None
+
+        Check if we have some not update orders. Send request to get data.
+        Request only orders with status = 'created'
+            and datetime within 10 minutes from now.
+        Execute query to update entries.
+    '''
+    statement = """
+                SELECT txid
+                FROM trades
+                WHERE created_at > %s
+                    AND status = 'created'
+                """
+    statement_data = (datetime.now() - timedelta(minutes=10000000),)
+    query_res = db.execute_fetch_sql(statement, statement_data)
+    txids = [res[0] for res in query_res]
+    if len(txids) > 0:
+        req_data = dict()
+        # list -> comma separated strings
+        req_data['txid'] = ','.join(txids)
+        query_res = kraken.query_private('QueryOrders', req_data)
+        for txid in txids:
+            price = query_res['result'][txid]['price']
+            status = query_res['result'][txid]['status']
+            statement = """
+                        UPDATE trades
+                        SET
+                            actual_price = %s,
+                            status = %s
+                        WHERE txid = %s;
+                        """
+            statement_data = (price, status, txid)
+            db.execute_sql(statement, statement_data)
 
 
 def timed_job():
@@ -363,6 +402,7 @@ def timed_job():
     except Exception:
         logger.error('Error in main loop', exc_info=True)
 
+
 # Initialise logging
 logger = logger_init()
 
@@ -371,11 +411,19 @@ if POWER != 1 and ('virtual_balance' not in globals()
                    or virtual_balance == (0, 0)):
     virtual_balance = init_virtual_balance(POWER)
 
+
 # Check if required database tables exist
-if db.check_table_exists('orders') is False:
+statement_data = ('trades',)
+statement = """
+            SELECT COUNT(*)
+            FROM information_schema.tables
+            WHERE table_name = %s
+            """
+# If not - create one
+if db.execute_fetch_sql(statement, statement_data)[0][0] == 0:
     statement = (
         """
-        CREATE TABLE orders (
+        CREATE TABLE trades (
             id SERIAL PRIMARY KEY,
             txid VARCHAR(255),
             created_at TIMESTAMPTZ,
@@ -392,4 +440,5 @@ if db.check_table_exists('orders') is False:
 # Start scheduling
 sched = BlockingScheduler()
 sched.add_job(timed_job, 'interval', minutes=1)
+sched.add_job(update_orders_data, 'interval', minutes=10)
 sched.start()
