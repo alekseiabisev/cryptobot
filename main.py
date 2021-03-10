@@ -381,14 +381,16 @@ def update_orders_data():
         for txid in txids:
             price = query_res['result'][txid]['price']
             status = query_res['result'][txid]['status']
+            amount = query_res['result'][txid]['vol_exec']
             statement = """
                         UPDATE trades
                         SET
                             actual_price = %s,
-                            status = %s
+                            status = %s,
+                            amount = %s
                         WHERE txid = %s;
                         """
-            statement_data = (price, status, txid)
+            statement_data = (price, status, amount, txid)
             db.execute_sql(statement, statement_data)
 
 
