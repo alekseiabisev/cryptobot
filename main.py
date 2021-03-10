@@ -298,6 +298,7 @@ def calculate_required_crypto(price, crypto_amount, money_amount):
     # Calculate potentially required crypto amount
     required_amount = ((crypto_amount + money_amount / price)
                        * CONFIG_BALANCE - crypto_amount)
+    required_amount = round(required_amount, 5)
     res = {'amount': required_amount, 'reason': ''}
 
     # Comparing required amount ot buy/sell with minimum allowed volume
@@ -332,7 +333,7 @@ def add_order(type, amount, price):
     req_data['pair'] = TRADING_PAIR
     req_data['ordertype'] = 'market'
     req_data['trading_agreement'] = 'agree'
-    req_data['volume'] = round(amount, 5)
+    req_data['volume'] = amount
 
     # Execute order
     res_data = kraken.query_private('AddOrder', req_data)
@@ -347,10 +348,11 @@ def add_order(type, amount, price):
         pair = TRADING_PAIR
         statement = """
                     INSERT INTO trades
-                    (txid, created_at, pair, type, expected_price, status)
-                    VALUES (%s, %s, %s, %s, %s, %s);
+                    (txid, created_at, pair, type,
+                    expected_price, status, amount)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s);
                     """
-        statement_data = (txid, dt, pair, type, price, 'created')
+        statement_data = (txid, dt, pair, type, price, 'created', amount)
         db.execute_sql(statement, statement_data)
 
 
@@ -432,7 +434,8 @@ if db.execute_fetch_sql(statement, statement_data)[0][0] == 0:
             signal VARCHAR(255),
             expected_price DECIMAL,
             status VARCHAR(255),
-            actual_price DECIMAL
+            actual_price DECIMAL,
+            amount DECIMAL
         )
         """)
     db.execute_sql(statement)
