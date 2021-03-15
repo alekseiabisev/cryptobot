@@ -6,7 +6,8 @@ import sys
 import json
 from datetime import datetime, timedelta
 from apscheduler.schedulers.blocking import BlockingScheduler
-import database as db
+
+from DBConn import Orders
 
 # Config comments:
 # MIN_TRANSACTION_VOLUME Consider replacing with API call information
@@ -344,16 +345,9 @@ def add_order(type, amount, price):
     # Add entry to database
     if 'result' in res_data:
         txid = res_data['result']['txid'][0]
-        dt = datetime.now()
         pair = TRADING_PAIR
-        statement = """
-                    INSERT INTO trades
-                    (txid, created_at, pair, type,
-                    expected_price, status, amount)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s);
-                    """
-        statement_data = (txid, dt, pair, type, price, 'created', amount)
-        db.execute_sql(statement, statement_data)
+        with Orders() as orders:
+            orders.add_orders(txid, pair, type, price, amount)
 
 
 def update_orders_data():
@@ -364,14 +358,8 @@ def update_orders_data():
             and datetime within 10 minutes from now.
         Execute query to update entries.
     '''
-    statement = """
-                SELECT txid
-                FROM trades
-                WHERE created_at > %s
-                    AND status = 'created'
-                """
-    statement_data = (datetime.now() - timedelta(minutes=10000000),)
-    query_res = db.execute_fetch_sql(statement, statement_data)
+    with Orders() as orders:
+        query_res = orders.get_not_update_trades(60)
     txids = [res[0] for res in query_res]
     if len(txids) > 0:
         req_data = dict()
@@ -382,16 +370,8 @@ def update_orders_data():
             price = query_res['result'][txid]['price']
             status = query_res['result'][txid]['status']
             amount = query_res['result'][txid]['vol_exec']
-            statement = """
-                        UPDATE trades
-                        SET
-                            actual_price = %s,
-                            status = %s,
-                            amount = %s
-                        WHERE txid = %s;
-                        """
-            statement_data = (price, status, amount, txid)
-            db.execute_sql(statement, statement_data)
+            with Orders() as orders:
+                orders.update_trades(txid, price, status, amount)
 
 
 def timed_job():
@@ -414,33 +394,6 @@ logger = logger_init()
 if POWER != 1 and ('virtual_balance' not in globals()
                    or virtual_balance == (0, 0)):
     virtual_balance = init_virtual_balance(POWER)
-
-
-# Check if required database tables exist
-statement_data = ('trades',)
-statement = """
-            SELECT COUNT(*)
-            FROM information_schema.tables
-            WHERE table_name = %s
-            """
-# If not - create one
-if db.execute_fetch_sql(statement, statement_data)[0][0] == 0:
-    statement = (
-        """
-        CREATE TABLE trades (
-            id SERIAL PRIMARY KEY,
-            txid VARCHAR(255),
-            created_at TIMESTAMPTZ,
-            pair VARCHAR(255),
-            type VARCHAR(255),
-            signal VARCHAR(255),
-            expected_price DECIMAL,
-            status VARCHAR(255),
-            actual_price DECIMAL,
-            amount DECIMAL
-        )
-        """)
-    db.execute_sql(statement)
 
 # Start scheduling
 sched = BlockingScheduler()
