@@ -62,12 +62,8 @@ def logger_init():
 
 
 def init_virtual_balance(power):
-    ''' Initialise required virtual balance.
-
-    Args:
-        power
-    Returns:
-        pair of numbers of required virtual balance
+    ''' int -> float, float
+        Initialise required virtual balance.
     '''
     virtual_crypto, virtual_money = 0, 0
 
@@ -148,10 +144,8 @@ def monitor_act():
 
 
 def get_balance():
-    ''' Requesting balance of assets from exchange.
-
-    Returns:
-        list with balance: crypto, money
+    ''' None -> list
+        Requesting balance of assets from exchange.
     '''
     crypto_amount, money_amount = 0, 0
     res_balance = kraken.query_private('Balance')
@@ -165,11 +159,10 @@ def get_balance():
 
 
 def get_price(pair):
-    '''Checks for the close ('c') price type of the pair.
-
+    ''' str -> float
+        Checks for the close ('c') price type of the pair.
     Args:
         pair: pair of symbols, e.g. XXBTZUSD
-
     Returns:
         Price for the given pair
     '''
@@ -215,7 +208,6 @@ def get_data(pair):
 
 def add_technical_indicators(df):
     ''' dataframe -> dataframe
-
         Add exponential moving averages and signal column(ewm_diff):
         negative - bearish; positive - bullish
         Add RSI indicators based on EWM and SMA:
@@ -257,7 +249,6 @@ def add_technical_indicators(df):
 
 def check_rsi_signal(rsi):
     ''' float -> str
-
         Determine call to action based on RSI level.'''
     if rsi < RSI['oversold_level']:
         rsi_signal = 'buy'
@@ -270,12 +261,11 @@ def check_rsi_signal(rsi):
 
 
 def check_ewm_signal(last, previous):
-    ''' Determines call to action based on received trends.
-
+    ''' (list, float) -> string
+        Determines call to action based on received trends.
     Args:
         last: list of last N trends (defined in config).
         previous: last trend
-
     Returns:
         String representing current trend.
         Possible values: 'sell', 'buy', 'wait'
@@ -289,7 +279,6 @@ def check_ewm_signal(last, previous):
 
 def calculate_required_crypto(price, crypto_amount, money_amount):
     ''' (float, float, float) -> (float, str)
-
         Returning required amount to balance portfolio
         Checks if it makes sense to change the balance based on minimum
         transaction volume.
@@ -320,10 +309,8 @@ def calculate_required_crypto(price, crypto_amount, money_amount):
 
 def add_order(type, amount, price):
     ''' (str, float, float) -> None
-
         Send an order to Exchange.
         Add order transaction information to database
-
     Args:
         type: string buy/sell
         amount: required amount of crypto to buy/sell
@@ -352,7 +339,6 @@ def add_order(type, amount, price):
 
 def update_orders_data():
     ''' None -> None
-
         Check if we have some not update orders. Send request to get data.
         Request only orders with status = 'created'
             and datetime within 10 minutes from now.
