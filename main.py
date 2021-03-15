@@ -340,11 +340,10 @@ def add_order(type, amount, price):
 def update_orders_data():
     ''' None -> None
         Check if we have some not update orders. Send request to get data.
-        Request only orders with status = 'created'
-            and datetime within 10 minutes from now.
         Execute query to update entries.
     '''
     with Orders() as orders:
+        # Get not updated orders created with last 60 minutes
         query_res = orders.get_not_update_trades(60)
     txids = [res[0] for res in query_res]
     if len(txids) > 0:
