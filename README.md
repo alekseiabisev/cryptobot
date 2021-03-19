@@ -18,12 +18,20 @@ Trade orders info is stored in PostgreSQL.
 
 **Once there is a signal to buy or sell and portfolio is not balanced - trade is executed.**
 
+![Trades example](Docs/Screenshot%202021-03-19%20at%2010.09.43.png)
+
 ### Signals:
-- Exponential moving averages trends crossing signal:
+- EWM. Exponential moving averages trends crossing signal:
 Currently set to 10 and 20 (can be changed in config). EMA crosses are giving a signal to buy / sell.
 - RSI signal:
 The relative strength index (RSI) is a momentum indicator used in technical analysis that measures the magnitude of recent price changes to evaluate overbought or oversold conditions in the price of a stock or other asset.
 Default setting (config): sell if RSI > 80, buy if RSI is less than 20. Window: 14 periods
+
+
+|EWM signal | RSI signal |
+| --- | --- |
+|![EWM signal](Docs/Screenshot%202021-03-19%20at%2011.04.22.png) | ![RSI signal](Docs/Screenshot%202021-03-19%20at%2011.02.46.png) | 
+
 
 ### Amount:
 Amount required for the trade is calculated based on the portfolio balance. Set in config (current: 50/50). Required amount is amount needed to balance up portfolio.
@@ -42,7 +50,7 @@ As for stable coins (BTC) volatility is quite moderate and most of the trades we
 - TRANSACTION_FEE - Exchange fee for transactions. Example: 0.0026,
 - INTERVAL - Interval of data checks in minutes. 1M, 3M, 5M, 15M, 30M, 1H, etc. Use 1 of frequent trading. Example: 1
 - EWM: - Exponential moving averages settings.
-	- window_length - Required of continuous lengths of the short-term trend appearance above or below long-term trend. Helping to ignore to quickly changing trends.
+	- window_length - Required of continuous lengths of the short-term trend appearance above or below long-term trend. Helping to ignore to quickly changing.  trends.
 	- long - periods of EWM. Default 20
 	- short - periods of EWM. Default 10
 - RSI - Relative strength index settings 
@@ -55,7 +63,7 @@ As for stable coins (BTC) volatility is quite moderate and most of the trades we
 With a power of 4, interval 1 (high frequency) trading on BTC/USDT pair measured annual return is about 15%. 
 With a 2k budget bot was doing about 10-15 trades a day.
 
-## Potential next steps
+## TODO
 Current volatility between BTC and USDT is not enough for high frequency trading. Using other coins with a high volatility is an option but could lead you for getting a lot of cheap coins with 0 liquidity.
 
 Alternative option: Round trading keeping a balance between multiple pairs of potentially perspective coins. For example:
