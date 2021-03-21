@@ -54,7 +54,7 @@ def logger_init():
     if config_param == '':
         fh = logging.FileHandler('logs/runtime.json')
     else:
-        fh = logging.FileHandler('logs/'+config_param+'.json')
+        fh = logging.FileHandler('logs/'+config_param+'.log')
 
     fh.setLevel(logging.DEBUG)
     sh = logging.StreamHandler(sys.stdout)
