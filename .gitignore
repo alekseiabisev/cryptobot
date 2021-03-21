@@ -18,6 +18,12 @@ LICENSE
 *.log
 logging_config.ini
 
+/configs/*
+!/configs/do_not_delete
+
+/logs/*
+!/logs/do_not_delete
+
 /env
 
 # Other

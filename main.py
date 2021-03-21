@@ -14,6 +14,9 @@ from DBConn import Orders
 # about user settings (if there is one)
 # TRANSACTION_FEE Consider replacing with API call:'TradeVolume'->fees->fee
 
+config_param=''
+if len(sys.argv) > 1:
+    config_param=sys.argv[1]
 
 # Connect to Kraken
 if 'KRAKEN_KEY' in os.environ:
@@ -26,7 +29,12 @@ else:
     kraken.load_key('kraken.key')
 
 # Load global variables from config file
-with open('config.json') as config_file:
+if config_param == '':
+    config_file='config_template.json'
+else:
+    config_file='configs/'+config_param+'.json'
+
+with open(config_file) as config_file:
     config = json.load(config_file)
 globals().update(config)
 
@@ -43,7 +51,11 @@ def logger_init():
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
     # Adding handlers
-    fh = logging.FileHandler('runtime.log')
+    if config_param == '':
+        fh = logging.FileHandler('logs/runtime.json')
+    else:
+        fh = logging.FileHandler('logs/'+config_param+'.json')
+
     fh.setLevel(logging.DEBUG)
     sh = logging.StreamHandler(sys.stdout)
     sh.setLevel(logging.INFO)
@@ -149,6 +161,8 @@ def get_balance():
     '''
     crypto_amount, money_amount = 0, 0
     res_balance = kraken.query_private('Balance')
+    if res_balance['error'] != []:
+        sys.exit(res_balance['error'])
     current_balance = res_balance['result']
     # Changing pair value type from string to float
     current_balance.update((k, float(v)) for k, v in current_balance.items())
@@ -170,6 +184,8 @@ def get_price(pair):
     req_data['pair'] = pair
     price_type = 'c'
     res_data = kraken.query_public("Ticker", req_data)
+    if res_data['error'] != []:
+        sys.exit(res_data['error'])
     last_trade_price = float(res_data['result']
                              [req_data['pair']]
                              [price_type][0])

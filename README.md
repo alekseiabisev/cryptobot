@@ -20,6 +20,75 @@ Trade orders info is stored in PostgreSQL.
 
 ![Trades example](Docs/Screenshot%202021-03-19%20at%2010.09.43.png)
 
+### Instalation:
+
+```bash
+cd cryptobot
+sudo pip3 install -r requirements.txt
+sudo apt-get install libatlas-base-dev
+```
+note: pandas requires libatlas-base-dev
+
+if you want to use postgree:
+```bash
+cd cryptobot
+sudo pip3 install -r requirements-postgree.txt
+```
+
+
+
+### Kraken configuration:
+We recommend to at it on ~/.bashrc
+
+```bash
+export KRAKEN_KEY=YOUR_KRAKEN_KEY
+export KRAKEN_SECRET=YOUR_KRAKEN_SECRET
+```
+
+### Kraken configuration:
+We recommend to at it on ~/.bashrc
+Default value: 'postgres://localhost/bot'
+
+For sqlight3:
+```bash
+export DATABASE_URL=sqlite3
+```
+### run configuration:
+We recommend to at it on ~/.bashrc
+Default value: 'postgres://localhost/bot'
+
+
+### running:
+When you execute:
+
+```bash
+cp config_template.json configs/btc_eur.json
+```
+The application why try to find a bt-usd.json (so you must create it) in the application directory.
+
+When it comes to the database:
+using postgree: it will try to find the database name bt-usd (check if this database exists)
+using sqlite3:  it will try to find the database file bt-usd.db
+
+So that you can run many boots parallel.
+
+Open the file btc_eur.json and adjust your parameters
+```bash
+nano configs/btc_eur.json
+```
+
+Run the application:
+```bash
+python3 ./main.py bt-usd
+```
+Tip:
+Test the key pars using this address https://api.kraken.com/0/public/Ticker?pair=XXBTZEUR
+
+More information on:
+https://support.kraken.com/hc/en-us/articles/360000678446-Cryptocurrencies-available-on-Kraken
+https://api.kraken.com/0/public/AssetPairs
+
+
 ### Signals:
 - EWM. Exponential moving averages trends crossing signal:
 Currently set to 10 and 20 (can be changed in config). EMA crosses are giving a signal to buy / sell.
@@ -30,7 +99,7 @@ Default setting (config): sell if RSI > 80, buy if RSI is less than 20. Window: 
 
 |EWM signal | RSI signal |
 | --- | --- |
-|![EWM signal](Docs/Screenshot%202021-03-19%20at%2011.04.22.png) | ![RSI signal](Docs/Screenshot%202021-03-19%20at%2011.02.46.png) | 
+|![EWM signal](Docs/Screenshot%202021-03-19%20at%2011.04.22.png) | ![RSI signal](Docs/Screenshot%202021-03-19%20at%2011.02.46.png) |
 
 
 ### Amount:
@@ -53,14 +122,14 @@ As for stable coins (BTC) volatility is quite moderate and most of the trades we
 	- window_length - Required of continuous lengths of the short-term trend appearance above or below long-term trend. Helping to ignore to quickly changing.  trends.
 	- long - periods of EWM. Default 20
 	- short - periods of EWM. Default 10
-- RSI - Relative strength index settings 
+- RSI - Relative strength index settings
 	- type: ewm|sma. Exponential moving weighed average or Simple moving average.
     - window_length: 14,
     - overbought_level: 80,
     - oversold_level: 20
- 
+
 ## Outcomes
-With a power of 4, interval 1 (high frequency) trading on BTC/USDT pair measured annual return is about 15%. 
+With a power of 4, interval 1 (high frequency) trading on BTC/USDT pair measured annual return is about 15%.
 With a 2k budget bot was doing about 10-15 trades a day.
 
 ## TODO
