@@ -79,7 +79,7 @@ nano configs/btc_eur.json
 
 Run the application:
 ```bash
-python3 ./main.py bt-usd
+python3 ./cryptobot.py bt-usd
 ```
 Tip:
 Test the key pars using this address https://api.kraken.com/0/public/Ticker?pair=XXBTZEUR
