@@ -5,12 +5,14 @@ from datetime import datetime, timedelta
 
 DBTYPE='postgres'
 config_param='bot'
+p_str='%s'
 
 if len(sys.argv) > 1:
     config_param=sys.argv[1]
 
 if 'DATABASE_URL' in os.environ:
     if os.environ['DATABASE_URL'] == 'sqlite3':
+        p_str='?'
         DBTYPE='sqlite3'
         DATABASE_URL=os.path.dirname(__file__) + '/configs/'+config_param+'.db'
         import sqlite3
@@ -38,7 +40,7 @@ class Orders:
     def create_table(self):
         ''' Create table for trades data in case if missing'''
         statement = (
-            """
+            f"""
             CREATE TABLE IF NOT EXISTS trades
             (
                 id SERIAL PRIMARY KEY,
@@ -58,11 +60,11 @@ class Orders:
 
     def add_orders(self, txid, pair, type, price, amount):
         ''' Add new orders to table '''
-        statement = """
+        statement = f"""
                     INSERT INTO trades
                     (txid, created_at, pair, type,
                     expected_price, status, amount)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s);
+                    VALUES ({p_str}, {p_str}, {p_str}, {p_str}, {p_str}, {p_str}, {p_str});
                     """
         dt = datetime.now()
         status = 'created'
@@ -73,11 +75,11 @@ class Orders:
     def get_not_update_trades(self, minutes_delta):
         ''' Select not updated trades '''
 
-        statement = """
+        statement = f"""
                     SELECT txid
                     FROM trades
                     WHERE status = 'created'
-                    AND created_at > %s
+                    AND created_at > {p_str}
                     """
         statement_data = (datetime.now() - timedelta(minutes=minutes_delta))
         self.cur.execute(statement, statement_data)
@@ -85,13 +87,13 @@ class Orders:
 
     def update_trades(self, txid, price, status, amount):
         ''' Update trades with actual information'''
-        statement = """
+        statement = f"""
                     UPDATE trades
                     SET
-                        actual_price = %s,
-                        status = %s,
-                        amount = %s
-                    WHERE txid = %s;
+                        actual_price = {p_str},
+                        status = {p_str},
+                        amount = {p_str}
+                    WHERE txid = {p_str};
                     """
         statement_data = (price, status, amount, txid)
         self.cur.execute(statement, statement_data)
