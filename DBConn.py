@@ -81,7 +81,7 @@ class Orders:
                     WHERE status = 'created'
                     AND created_at > {p_str}
                     """
-        statement_data = (datetime.now() - timedelta(minutes=minutes_delta))
+        statement_data = (datetime.now() - timedelta(minutes=minutes_delta),)
         self.cur.execute(statement, statement_data)
         return self.cur.fetchall()
 
