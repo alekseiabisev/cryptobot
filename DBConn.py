@@ -1,14 +1,25 @@
 ''' Database connection interface. '''
-
-import psycopg2
 import os
+import sys
 from datetime import datetime, timedelta
 
+DBTYPE='postgres'
+config_param='bot'
+
+if len(sys.argv) > 1:
+    config_param=sys.argv[1]
 
 if 'DATABASE_URL' in os.environ:
-    DATABASE_URL = os.environ['DATABASE_URL'] + '?sslmode=require'
+    if os.environ['DATABASE_URL'] == 'sqlite3':
+        DBTYPE='sqlite3'
+        DATABASE_URL=os.path.dirname(__file__) + '/configs/'+config_param+'.db'
+        import sqlite3
+    else:
+        DATABASE_URL = os.environ['DATABASE_URL'] + '?sslmode=require'
+        import psycopg2
 else:
-    DATABASE_URL = 'postgres://localhost/bot'
+    DATABASE_URL = 'postgres://localhost/'+config_param
+    import psycopg2
 
 
 class Orders:
@@ -16,7 +27,11 @@ class Orders:
     conn = None
 
     def __init__(self):
-        self.conn = psycopg2.connect(DATABASE_URL)
+        if DBTYPE == 'sqlite3':
+            self.conn = sqlite3.connect(DATABASE_URL)
+        else:
+            self.conn = psycopg2.connect(DATABASE_URL)
+
         self.cur = self.conn.cursor()
         self.create_table()
 
@@ -64,7 +79,7 @@ class Orders:
                     WHERE status = 'created'
                     AND created_at > %s
                     """
-        statement_data = (datetime.now() - timedelta(minutes=minutes_delta),)
+        statement_data = (datetime.now() - timedelta(minutes=minutes_delta))
         self.cur.execute(statement, statement_data)
         return self.cur.fetchall()
 
