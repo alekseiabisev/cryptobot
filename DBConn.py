@@ -12,7 +12,7 @@ if len(sys.argv) > 1:
 if 'DATABASE_URL' in os.environ:
     if os.environ['DATABASE_URL'] == 'sqlite3':
         DBTYPE='sqlite3'
-        DATABASE_URL=os.path.dirname(__file__) + '/config/smarthome.db'
+        DATABASE_URL=os.path.dirname(__file__) + '/configs/smarthome.db'
         import sqlite3
     else:
         DATABASE_URL = os.environ['DATABASE_URL'] + '?sslmode=require'
