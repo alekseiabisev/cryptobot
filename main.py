@@ -103,7 +103,7 @@ def monitor_act():
     rsi_signal = check_rsi_signal(last_rsi)
 
     # Cancel all still not executed orders
-    kraken.query_private('CancelAll')
+    # kraken.query_private('CancelAll')
 
     # Get current balances.
     # Will be used to check if assets are in balance with a current price
