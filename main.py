@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 import json
+import sentry_sdk
 from datetime import datetime, timedelta
 from apscheduler.schedulers.blocking import BlockingScheduler
 
@@ -29,6 +30,10 @@ else:
 with open('config.json') as config_file:
     config = json.load(config_file)
 globals().update(config)
+
+
+# Initialising Sentry
+sentry_sdk.init(os.environ['SENTRY_DSN'])
 
 
 def logger_init():
