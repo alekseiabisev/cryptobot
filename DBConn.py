@@ -41,17 +41,17 @@ class Orders:
         self.cur.execute(statement)
         self.conn.commit()
 
-    def add_orders(self, txid, pair, type, price, amount):
+    def add_orders(self, txid, pair, type, price, amount, signal):
         ''' Add new orders to table '''
         statement = """
                     INSERT INTO trades
-                    (txid, created_at, pair, type,
+                    (txid, created_at, pair, type, signal
                     expected_price, status, amount)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s);
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
                     """
         dt = datetime.now()
         status = 'created'
-        statement_data = (txid, dt, pair, type, price, status, amount)
+        statement_data = (txid, dt, pair, type, signal, price, status, amount)
         self.cur.execute(statement, statement_data)
         self.conn.commit()
 

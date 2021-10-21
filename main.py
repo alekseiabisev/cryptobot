@@ -141,13 +141,17 @@ def monitor_act():
     elif amount == 0:
         logger.info(f'No action. Reason: {reason}')
     elif (ewm_signal == 'buy' or rsi_signal == 'buy'):
-        if amount > 0:
-            add_order('buy', abs(amount), price)
+        if amount > 0 and ewm_signal == 'buy':
+            add_order('buy', abs(amount), price, 'EWM')
+        elif amount > 0 and rsi_signal == 'buy':
+            add_order('buy', abs(amount), price, 'RSI')
         else:
             logger.info(f'No action. We are overbought')
     elif (ewm_signal == 'sell' or rsi_signal == 'sell'):
-        if amount < 0:
-            add_order('sell', abs(amount), price)
+        if amount < 0 and ewm_signal == 'sell':
+            add_order('sell', abs(amount), price, 'EWM')
+        elif amount < 0 and rsi_signal == 'sell':
+            add_order('sell', abs(amount), price, 'RSI')
         else:
             logger.info(f'No action. We are oversold')
     else:
@@ -318,14 +322,15 @@ def calculate_required_crypto(price, crypto_amount, money_amount):
     return res
 
 
-def add_order(type, amount, price):
-    ''' (str, float, float) -> None
+def add_order(type, amount, price, signal='N/D'):
+    ''' (str, float, float, str) -> None
         Send an order to Exchange.
         Add order transaction information to database
     Args:
         type: string buy/sell
         amount: required amount of crypto to buy/sell
         price:
+        signal: EWM / RSI / not defined
     '''
     req_data = dict()
     req_data['type'] = type
@@ -345,7 +350,7 @@ def add_order(type, amount, price):
         txid = res_data['result']['txid'][0]
         pair = TRADING_PAIR
         with Orders() as orders:
-            orders.add_orders(txid, pair, type, price, amount)
+            orders.add_orders(txid, pair, type, price, amount, signal)
 
 
 def update_orders_data():
