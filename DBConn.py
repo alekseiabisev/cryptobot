@@ -45,7 +45,7 @@ class Orders:
         ''' Add new orders to table '''
         statement = """
                     INSERT INTO trades
-                    (txid, created_at, pair, type, signal
+                    (txid, created_at, pair, type, signal,
                     expected_price, status, amount)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
                     """
