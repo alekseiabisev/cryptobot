@@ -140,10 +140,16 @@ def monitor_act():
         logger.info(f'No action. No trade signal')
     elif amount == 0:
         logger.info(f'No action. Reason: {reason}')
-    elif (ewm_signal == 'buy' or rsi_signal == 'buy') and amount > 0:
-        add_order('buy', abs(amount), price)
-    elif (ewm_signal == 'sell' or rsi_signal == 'sell') and amount < 0:
-        add_order('sell', abs(amount), price)
+    elif (ewm_signal == 'buy' or rsi_signal == 'buy'):
+        if amount > 0:
+            add_order('buy', abs(amount), price)
+        else:
+            logger.info(f'No action. We are overbought')
+    elif (ewm_signal == 'sell' or rsi_signal == 'sell'):
+        if amount < 0:
+            add_order('sell', abs(amount), price)
+        else:
+            logger.info(f'No action. We are oversold')
     else:
         logger.info(f'No action.')
 
@@ -332,7 +338,7 @@ def add_order(type, amount, price):
     res_data = kraken.query_private('AddOrder', req_data)
 
     # Add logger entry
-    logger.info(f'Call {type} function. Required amount: {amount}')
+    logger.info(f'Call {type} function. Required amount: {amount}, Expected price: {price}')
 
     # Add entry to database
     if 'result' in res_data:
